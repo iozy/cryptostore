@@ -38,6 +38,9 @@ def load_config() -> Feed:
         raise ValueError("Channels must be specified")
     channels = channels.split(",")
 
+    max_depth = os.environ.get('MAX_DEPTH', 20)
+    max_depth = int(max_depth)
+
     config = os.environ.get('CONFIG')
     backend = os.environ.get('BACKEND')
     snap_only = os.environ.get('SNAPSHOT_ONLY', False)
@@ -147,7 +150,7 @@ def load_config() -> Feed:
     for r in remove:
         del cbs[r]
 
-    return EXCHANGE_MAP[exchange](candle_interval=candle_interval, symbols=symbols, channels=channels, config=config, callbacks=cbs)
+    return EXCHANGE_MAP[exchange](candle_interval=candle_interval, max_depth=max_depth, symbols=symbols, channels=channels, config=config, callbacks=cbs)
 
 
 def main():
