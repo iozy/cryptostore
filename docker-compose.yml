@@ -27,7 +27,7 @@ services:
       - market-data:/var/lib/questdb
   # redis:
   #   image: redis:alpine
-  #   command: redis-server --appendonly yes
+  #   command: redis-server --appendonly yes --appendfsync everysec --save 60 1000 --maxmemory 1gb --maxmemory-policy allkeys-lru
   #   ports:
   #     - 6379:6379
   #   volumes:
