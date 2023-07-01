@@ -1,0 +1,43 @@
+version: "3.3"
+services:
+  cryptostore:
+    image: cryptostore:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - EXCHANGE=BITSTAMP
+      - CHANNELS=trades,l2_book
+      - SYMBOLS=BTC-USD,ETH-USD
+      - SNAPSHOT_ONLY=True
+      - MAX_DEPTH=20
+      - BACKEND=QUEST
+      - HOST=quest
+      - PORT=9009
+  quest:
+    image: questdb/questdb
+    environment:
+      - DEBUG=Advisory,Critical,Error
+    ports:
+      - 9009:9009
+      - 9000:9000
+    volumes:
+      - market-data:/var/lib/questdb
+  # redis:
+  #   image: redis:alpine
+  #   command: redis-server --appendonly yes
+  #   ports:
+  #     - 6379:6379
+  #   volumes:
+  #     - market-data:/data
+
+  # redis-commander:
+  #   image: plainid/redis-commander:latest-master
+  #   environment:
+  #     - REDIS_HOSTS=redis
+  #   ports:
+  #     - 8081:8081
+
+volumes:
+  market-data:
+
