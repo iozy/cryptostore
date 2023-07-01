@@ -2,6 +2,8 @@ version: "3.3"
 services:
   cryptostore:
     image: cryptostore:latest
+    depends_on:
+      - quest
     build:
       context: .
       dockerfile: Dockerfile
