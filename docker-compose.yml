@@ -12,14 +12,14 @@ services:
       - CHANNELS=trades,l2_book
       - SYMBOLS=BTC-USD,ETH-USD,ETH-BTC
       - SNAPSHOT_ONLY=True
-      - MAX_DEPTH=20
+      - MAX_DEPTH=10
       - BACKEND=QUEST
       - HOST=quest
       - PORT=9009
   quest:
     image: questdb/questdb
     environment:
-      - QDB_LOG_W_STDOUT_LEVEL=ERROR
+      - QDB_LOG_W_STDOUT_LEVEL=ADVISORY,CRITICAL,ERROR
       - QDB_PG_READONLY_USER_ENABLED=true
     ports:
       - 9009:9009
