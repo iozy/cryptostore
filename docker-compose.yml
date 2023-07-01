@@ -8,7 +8,7 @@ services:
     environment:
       - EXCHANGE=BITSTAMP
       - CHANNELS=trades,l2_book
-      - SYMBOLS=BTC-USD,ETH-USD
+      - SYMBOLS=BTC-USD,ETH-USD,ETH-BTC
       - SNAPSHOT_ONLY=True
       - MAX_DEPTH=20
       - BACKEND=QUEST
@@ -18,8 +18,10 @@ services:
     image: questdb/questdb
     environment:
       - DEBUG=Advisory,Critical,Error
+      - QDB_PG_READONLY_USER_ENABLED=true
     ports:
       - 9009:9009
+      - 8812:8812
       - 9000:9000
     volumes:
       - market-data:/var/lib/questdb
