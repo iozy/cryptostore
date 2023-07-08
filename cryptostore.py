@@ -18,6 +18,16 @@ from cryptofeed.backends.socket import BookSocket, TradeSocket, TickerSocket, Fu
 from cryptofeed.backends.influxdb import BookInflux, TradeInflux, TickerInflux, FundingInflux, CandlesInflux, OpenInterestInflux, LiquidationsInflux
 from cryptofeed.backends.quest import BookQuest, TradeQuest, TickerQuest, FundingQuest, CandlesQuest, OpenInterestQuest, LiquidationsQuest
 
+# Workaround for fixing mismatched bid/ask prices column names
+class BookQuestFixed(BookQuest):
+    async def __call__(self, book, receipt_timestamp: float):
+        vals = ','.join([f"bid_{i}_price={book.book.bids.index(i)[0]},bid_{i}_size={book.book.bids.index(i)[1]}" for i in range(self.depth)] + [f"ask_{i}_price={book.book.asks.index(i)[0]},ask_{i}_size={book.book.asks.index(i)[1]}" for i in range(self.depth)])
+        timestamp = book.timestamp
+        receipt_timestamp_int = int(receipt_timestamp * 1_000_000)
+        timestamp_int = int(timestamp * 1_000_000_000) if timestamp is not None else receipt_timestamp_int * 1000
+        update = f'{self.key}-{book.exchange},symbol={book.symbol} {vals},receipt_timestamp={receipt_timestamp_int}t {timestamp_int}'
+        await self.queue.put(update)
+# End of workaround
 
 async def tty(obj, receipt_ts):
     # For debugging purposes
@@ -32,7 +42,7 @@ def load_config() -> Feed:
     if symbols is None:
         raise ValueError("Symbols must be specified")
     symbols = symbols.split(",")
-    if len(symbols) == 1 and upper(symbols[0]) == 'ALL':
+    if len(symbols) == 1 and symbols[0].upper() == 'ALL':
         eobj = EXCHANGE_MAP[exchange.upper()]()
         symbols = eobj.symbols()
 
@@ -125,9 +135,9 @@ def load_config() -> Feed:
             LIQUIDATIONS: LiquidationsInflux(*args)
         }
     elif backend == 'QUEST':
-        kwargs = {'host': host, 'port': port if port else 9009}
+        kwargs = {'host': host, 'port': port if port else 9009, 'depth': max_depth}
         cbs = {
-            L2_BOOK: BookQuest(**kwargs),
+            L2_BOOK: BookQuestFixed(**kwargs),
             TRADES: TradeQuest(**kwargs),
             TICKER: TickerQuest(**kwargs),
             FUNDING: FundingQuest(**kwargs),
@@ -153,7 +163,7 @@ def load_config() -> Feed:
     for r in remove:
         del cbs[r]
 
-    return EXCHANGE_MAP[exchange](candle_interval=candle_interval, depth=max_depth, max_depth=max_depth, symbols=symbols, channels=channels, config=config, callbacks=cbs)
+    return EXCHANGE_MAP[exchange](candle_interval=candle_interval, max_depth=max_depth, symbols=symbols, channels=channels, config=config, callbacks=cbs)
 
 
 def main():
