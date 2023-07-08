@@ -32,6 +32,9 @@ def load_config() -> Feed:
     if symbols is None:
         raise ValueError("Symbols must be specified")
     symbols = symbols.split(",")
+    if len(symbols) == 1 and upper(symbols[0]) == 'ALL':
+        eobj = EXCHANGE_MAP[exchange.upper()]()
+        symbols = eobj.symbols()
 
     channels = os.environ.get('CHANNELS')
     if channels is None:
@@ -150,7 +153,7 @@ def load_config() -> Feed:
     for r in remove:
         del cbs[r]
 
-    return EXCHANGE_MAP[exchange](candle_interval=candle_interval, max_depth=max_depth, symbols=symbols, channels=channels, config=config, callbacks=cbs)
+    return EXCHANGE_MAP[exchange](candle_interval=candle_interval, depth=max_depth, max_depth=max_depth, symbols=symbols, channels=channels, config=config, callbacks=cbs)
 
 
 def main():
